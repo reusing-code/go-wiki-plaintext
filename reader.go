@@ -1,21 +1,29 @@
 package main
 
 import (
+	"compress/gzip"
 	"fmt"
+	"io"
 	"os"
+	"path"
 	"runtime"
 	"strings"
 	"sync"
 
-	"github.com/kennygrant/sanitize"
-
 	"github.com/dustin/go-wikiparse"
+	"github.com/kennygrant/sanitize"
 )
 
 const indexFileSuffix = "multistream-index.txt.bz2"
 const dataFileSuffix = "multistream.xml.bz2"
 
-func readDump(indexFile string) error {
+type DumpReader struct {
+	Compress bool
+	OutDir   string
+	Parser   wikiparse.Parser
+}
+
+func (dr *DumpReader) readDump(indexFile string) error {
 
 	if !strings.HasSuffix(indexFile, indexFileSuffix) {
 
@@ -23,35 +31,33 @@ func readDump(indexFile string) error {
 	}
 	dataFile := strings.TrimSuffix(indexFile, indexFileSuffix) + dataFileSuffix
 
-	p, err := wikiparse.NewIndexedParser(indexFile, dataFile, runtime.NumCPU())
+	var err error = nil
+	dr.Parser, err = wikiparse.NewIndexedParser(indexFile, dataFile, runtime.NumCPU())
 	if err != nil {
 		return err
 	}
 
-	err = os.RemoveAll("out")
+	err = os.RemoveAll(dr.OutDir)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll("out", 0777)
-	if err != nil {
-		return err
-	}
+
 	var wg sync.WaitGroup
 	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
-		go writeAllPagesToFiles(p, &wg)
+		go dr.writeAllPagesToFiles(&wg)
 	}
 	wg.Wait()
 
 	return nil
 }
 
-func writeAllPagesToFiles(p wikiparse.Parser, wg *sync.WaitGroup) {
+func (dr *DumpReader) writeAllPagesToFiles(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
-		page, err := p.Next()
+		page, err := dr.Parser.Next()
 		if err == nil {
-			err := writePageToFile("out", page)
+			err := dr.writePageToFile(page)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -62,7 +68,7 @@ func writeAllPagesToFiles(p wikiparse.Parser, wg *sync.WaitGroup) {
 
 }
 
-func writePageToFile(outDir string, page *wikiparse.Page) error {
+func (dr *DumpReader) writePageToFile(page *wikiparse.Page) error {
 	var prefixlen = 20
 	if strlen := len(page.Revisions[0].Text); strlen < 20 {
 		prefixlen = strlen
@@ -76,36 +82,65 @@ func writePageToFile(outDir string, page *wikiparse.Page) error {
 		return nil
 	}
 
-	baseName := sanitize.BaseName(page.Title)
+	out, err := dr.createOutputFile(page.Title)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if dr.Compress {
+		writer, err := gzip.NewWriterLevel(out, 3)
+		if err != nil {
+			return err
+		}
+		defer writer.Close()
+		out = writer
+	}
+
+	_, err = io.WriteString(out, page.Title+"\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = io.WriteString(out, page.Revisions[0].Text)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (dr *DumpReader) createOutputFile(title string) (io.WriteCloser, error) {
+	extension := ".txt"
+	if dr.Compress {
+		extension += ".gz"
+	}
+	baseName := sanitize.BaseName(title)
+	baseName = strings.ToLower(baseName)
 	if len(baseName) == 0 {
 		baseName = "_empty"
 	}
-	fileName := outDir + "/" + baseName + ".txt"
+
+	dir := path.Join(dr.OutDir, baseName[0:1])
+	err := os.MkdirAll(dir, 0777)
+	if err != nil {
+		return nil, err
+	}
+
+	fileName := path.Join(dir, baseName+extension)
 	i := 0
 	for {
 		_, err := os.Stat(fileName)
 		if os.IsNotExist(err) {
 			break
 		}
-		fileName = outDir + "/" + fmt.Sprintf("%s-%d.txt", baseName, i)
+		fileName = path.Join(dir, fmt.Sprintf("%s-%d%s", baseName, i, extension))
 		i++
 	}
 
 	out, err := os.Create(fileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer out.Close()
-
-	_, err = out.WriteString(page.Title + "\n")
-	if err != nil {
-		return err
-	}
-
-	_, err = out.WriteString(page.Revisions[0].Text)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return out, nil
 }

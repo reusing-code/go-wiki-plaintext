@@ -1,0 +1,50 @@
+Notwendigkeit
+In der Alltagssprache bezeichnet man etwas als '''notwendig''', wenn man glaubt („für notwendig halten“), dass es benötigt wird bzw. vorhanden sein muss, um einen bestimmten Zustand oder ein bestimmtes [[Kausalität|Ergebnis]] zu erreichen. Manchmal wird auch die Steigerung „am notwendigsten“, dringend notwendig usw. verwendet, um die [[Priorität]] einer Maßnahme anzudeuten.
+
+Häufig wird Notwendigkeit auch im Sinne von (Grund-) [[Voraussetzung]] gebraucht.
+
+Im wissenschaftlichen und systematischen Sprachgebrauch kommen die Wörter „notwendig“ und „Notwendigkeit“ vor allem in zwei Verwendungen vor:
+
+# Im Sinn einer ''notwendigen Bedingung'', die ausdrückt, dass ein Sachverhalt gegeben sein muss, damit ein anderer Sachverhalt erst eintreten kann. In diesem Sinn ist zum Beispiel das Vorhandensein von Sauerstoff notwendig, damit ein Verbrennungsprozess stattfinden kann. Siehe dazu [[Notwendige und hinreichende Bedingung]].
+# Im Sinn ''logischer Notwendigkeit'', die ausdrückt, dass eine Aussage ganz unabhängig vom tatsächlichen Zustand der Welt wahr sein muss. Innerhalb der Logik wird Notwendigkeit in diesem Sinn von der [[Modallogik]] thematisiert.
+
+== Philosophie ==
+In der [[Ontologie]] ist die (absolute) Notwendigkeit der Gegenbegriff zur [[Kontingenz (Philosophie)|Kontingenz]].
+
+[[Gottfried Wilhelm Leibniz]] definiert Notwendigkeit als Wahrheit in allen möglichen Welten. Kontingent ist für ihn eine Aussage, wenn sie in mindestens einer möglichen Welt wahr und in mindestens einer möglichen Welt falsch ist. Die formale Semantik vieler logischer Systeme greift auf diesen Gedanken zurück (siehe [[Modallogik]]).
+
+Im politischen Denken [[Niccolò Machiavelli]]s nimmt die Notwendigkeit (''necessità'') eine Schlüsselrolle ein. Das politische Handeln solle sich nach der Notwendigkeit einer Situation richten.
+
+== Logische Notwendigkeit ==
+{{Hauptartikel|Modallogik}}
+Logische Notwendigkeit ist eine Eigenschaft von Aussagen. Eine Aussage ist genau dann logisch notwendig, wenn es unmöglich ist, dass diese Aussage falsch ist. Doch diese Formulierung ist eine Beschreibung, keine Definition. Die übliche formale Definition für Notwendigkeit geht auf [[Gottfried Wilhelm Leibniz|Leibniz]] und sein Konzept der möglichen Welten zurück: Eine Aussage wird genau dann als notwendig betrachtet, wenn sie in allen überhaupt möglichen Welten wahr ist, wenn die Wirklichkeit also keinesfalls so beschaffen sein könnte, dass die gegenständliche Aussage falsch sein kann.
+
+Das Gegenstück zur logischen Notwendigkeit ist die logische Möglichkeit: Eine Aussage ist genau dann möglich, wenn sie nicht notwendigerweise falsch ist, d.&nbsp;h. wenn die Wirklichkeit so beschaffen sein könnte, dass die Aussage wahr wäre.
+
+Ein ausgesprochen banales, dafür aber eingängiges Beispiel für eine logisch notwendige Aussage ist der Satz „Es gibt Säugetiere, oder es gibt keine Säugetiere“. Unabhängig davon, wie die Wirklichkeit beschaffen ist, muss eine der beiden Alternativen zutreffen, ist die Aussage also wahr.
+
+Thematisiert und exakter (und auch noch etwas allgemeiner) definiert werden logische Notwendigkeit und Möglichkeit in der Modallogik.
+
+== Logik und Mathematik ==
+Wie die anderen Wissenschaften verwenden [[Logik]] und [[Mathematik]] den Begriff der Notwendigkeit. Eine Sonderrolle haben sie insofern, als sie bewusst beide Formen von Notwendigkeit (hinreichende Bedingung und logische Notwendigkeit) intensiv benutzen und beide Formen formalisieren.
+
+Die ''hinreichende Bedingung'' wird in formaler Logik durch die materiale [[Implikation]] (besser: Konditional oder Subjunktion) ausgedrückt bzw. präzisiert. Man schreibt <math>P \rightarrow Q</math>, wobei P und Q beliebige Aussagen sind, um auszudrücken, dass P eine hinreichende Bedingung für Q ist oder&nbsp;– was das Gleiche ist&nbsp;– dass Q eine notwendige Bedingung für P ist.
+
+Zum Untersuchungsgegenstand wird Notwendigkeit in einem allgemeinen Sinn, die Notwendigkeit von Aussagen, in der Modallogik. Sie verwendet und formalisiert zu diesem Zweck die Modaloperatoren ''es ist notwendig, dass'' und ''es ist möglich, dass''.
+
+== Siehe auch ==
+* [[Aussagenlogik#Hinreichende und notwendige Bedingung]]
+* [[De re und de dicto]]
+* [[Notwendige und hinreichende Bedingung]]
+
+== Literatur ==
+* [[Kurt Kluxen]]: ''Der Begriff der necessità im Denken Machiavellis'', Dissertation, Bensberg 1949.
+
+== Weblinks ==
+{{Wiktionary|Notwendigkeit}}
+{{Wiktionary|notwendig}}
+{{Wikiquote|Notwendigkeit}}
+* {{SEP|http://plato.stanford.edu/entries/necessary-sufficient/ ''Necessary and Sufficient Conditions.''}}
+* Stephan Kürner: [http://xtf.lib.virginia.edu/xtf/view?docId=DicHist/uvaBook/tei/DicHist3.xml;chunk.id=dv3-45;toc.depth=1;toc.id=dv3-45;brand=default Necessity] in: [[Dictionary of the History of Ideas]]
+
+[[Kategorie:Logik]]
