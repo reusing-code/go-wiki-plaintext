@@ -30,6 +30,30 @@ type headingElement struct {
 	equalsCount int
 }
 
+type footerElement struct{}
+
+var footerHeadings = map[string]bool{
+	"Notes":             true,
+	"See also":          true,
+	"References":        true,
+	"External links":    true,
+	"Suggested reading": true,
+	"Siehe auch":        true,
+	"Literatur":         true,
+	"Weblinks":          true,
+	"Einzelnachweise":   true,
+	"Quellen":           true,
+}
+
+func Clean(input string) (string, error) {
+	stack := newStack()
+	for i := 0; i < len(input); i++ {
+		stack.parseByte(input[i])
+	}
+
+	return html.UnescapeString(stack.getData()), nil
+}
+
 func newStack() *elementStack {
 	stack := &elementStack{make([]element, 0)}
 	stack.push(&baseElement{stack, &bytes.Buffer{}, 0})
@@ -43,13 +67,20 @@ func (stack *elementStack) getData() string {
 	return string(stack.top().getData())
 }
 
-func Clean(input string) (string, error) {
-	stack := newStack()
-	for i := 0; i < len(input); i++ {
-		stack.parseByte(input[i])
-	}
+func (stack *elementStack) top() element {
+	return stack.elements[len(stack.elements)-1]
+}
 
-	return html.UnescapeString(stack.getData()), nil
+func (stack *elementStack) pop() {
+	if len(stack.elements) > 1 {
+		data := stack.top().getData()
+		stack.elements = stack.elements[:len(stack.elements)-1]
+		stack.top().addData(data)
+	}
+}
+
+func (stack *elementStack) push(ele element) {
+	stack.elements = append(stack.elements, ele)
 }
 
 func (stack *elementStack) parseByte(b byte) {
@@ -82,22 +113,6 @@ func (e *baseElement) addData(b []byte) {
 	e.data.Write(b)
 }
 
-func (stack *elementStack) top() element {
-	return stack.elements[len(stack.elements)-1]
-}
-
-func (stack *elementStack) pop() {
-	if len(stack.elements) > 1 {
-		data := stack.top().getData()
-		stack.elements = stack.elements[:len(stack.elements)-1]
-		stack.top().addData(data)
-	}
-}
-
-func (stack *elementStack) push(ele element) {
-	stack.elements = append(stack.elements, ele)
-}
-
 func (e *headingElement) parseByte(b byte) {
 	if b == '=' {
 		if e.equalsCount == 0 {
@@ -119,9 +134,25 @@ func (e *headingElement) parseByte(b byte) {
 }
 
 func (e *headingElement) getData() []byte {
-	return e.data.Bytes()
+	if _, ok := footerHeadings[e.data.String()]; ok {
+		l := len(e.stack.elements)
+		e.stack.elements = append(e.stack.elements[:l-1], &footerElement{}, e)
+		return []byte{}
+	} else {
+		return e.data.Bytes()
+	}
 }
 
 func (e *headingElement) addData(b []byte) {
 	e.data.Write(b)
+}
+
+func (e *footerElement) parseByte(b byte) {
+}
+
+func (e *footerElement) getData() []byte {
+	return []byte{}
+}
+
+func (e *footerElement) addData(b []byte) {
 }
