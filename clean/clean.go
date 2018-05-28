@@ -9,40 +9,119 @@ type cleanerState struct {
 }
 
 type elementStack struct {
-	stack []element
-	data  *bytes.Buffer
+	elements []element
 }
 
-type element struct {
-	elemType elementType
-	data     *bytes.Buffer
+type element interface {
+	parseByte(b byte)
+	getData() []byte
+	addData([]byte)
+}
+type baseElement struct {
+	stack       *elementStack
+	data        *bytes.Buffer
+	equalsCount int
 }
 
-type elementType int
+type headingElement struct {
+	stack       *elementStack
+	data        *bytes.Buffer
+	level       int
+	equalsCount int
+}
 
-const (
-	HEADING_1 elementType = iota
-	HEADING_2
-	HEADING_3
-	HEADING_4
-	HEADING_5
-	INTERNAL_LINK
-	EXTERNAL_LINK
-)
+func newStack() *elementStack {
+	stack := &elementStack{make([]element, 0)}
+	stack.push(&baseElement{stack, &bytes.Buffer{}, 0})
+	return stack
+}
+
+func (stack *elementStack) getData() string {
+	for len(stack.elements) > 1 {
+		stack.pop()
+	}
+	return string(stack.top().getData())
+}
 
 func Clean(input string) (string, error) {
-	stack := &elementStack{make([]element, 0), &bytes.Buffer{}}
+	stack := newStack()
 	for i := 0; i < len(input); i++ {
-		a := input[i]
-		b := '"'
-		c := string(a)
-		if input[i] == '=' {
-			continue
-		}
-		stack.data.WriteByte(input[i])
-		a = a + byte(b)
-		c = c + c
+		stack.parseByte(input[i])
 	}
 
-	return html.UnescapeString(stack.data.String()), nil
+	return html.UnescapeString(stack.getData()), nil
+}
+
+func (stack *elementStack) parseByte(b byte) {
+	stack.top().parseByte(b)
+}
+
+func (e *baseElement) parseByte(b byte) {
+	if b == ' ' && e.equalsCount > 0 {
+		e.data.Truncate(e.data.Len() - e.equalsCount)
+
+		e.stack.push(&headingElement{e.stack, &bytes.Buffer{}, e.equalsCount, 0})
+
+		e.equalsCount = 0
+		return
+	}
+
+	if b == '=' {
+		e.equalsCount++
+	} else {
+		e.equalsCount = 0
+	}
+	e.data.WriteByte(b)
+}
+
+func (e *baseElement) getData() []byte {
+	return e.data.Bytes()
+}
+
+func (e *baseElement) addData(b []byte) {
+	e.data.Write(b)
+}
+
+func (stack *elementStack) top() element {
+	return stack.elements[len(stack.elements)-1]
+}
+
+func (stack *elementStack) pop() {
+	if len(stack.elements) > 1 {
+		data := stack.top().getData()
+		stack.elements = stack.elements[:len(stack.elements)-1]
+		stack.top().addData(data)
+	}
+}
+
+func (stack *elementStack) push(ele element) {
+	stack.elements = append(stack.elements, ele)
+}
+
+func (e *headingElement) parseByte(b byte) {
+	if b == '=' {
+		if e.equalsCount == 0 {
+			l := e.data.Len()
+			if e.data.Bytes()[l-1] == ' ' {
+				e.data.Truncate(l - 1)
+			}
+		}
+		e.equalsCount++
+		if e.equalsCount == e.level {
+			e.stack.pop()
+			return
+		}
+	} else {
+		e.equalsCount = 0
+		e.data.WriteByte(b)
+	}
+
+}
+
+func (e *headingElement) getData() []byte {
+	return e.data.Bytes()
+}
+
+func (e *headingElement) addData(b []byte) {
+	e.data.Write(b)
 }

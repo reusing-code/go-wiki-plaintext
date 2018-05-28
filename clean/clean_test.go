@@ -6,7 +6,8 @@ import (
 )
 
 func TestCleanSimple(t *testing.T) {
-	Clean("Test == bla")
+	str, _ := Clean("Test == bla ==asdalsdasdasd")
+	t.Errorf(str)
 }
 
 func TestCleanArticle(t *testing.T) {
