@@ -14,7 +14,7 @@ type elementStack struct {
 
 type element interface {
 	parseByte(b byte)
-	getData() []byte
+	getFinishedData() []byte
 	addData([]byte)
 }
 type baseElement struct {
@@ -31,6 +31,11 @@ type headingElement struct {
 }
 
 type footerElement struct{}
+
+type linkElement struct {
+	stack *elementStack
+	data  *bytes.Buffer
+}
 
 var footerHeadings = map[string]bool{
 	"Notes":             true,
@@ -64,7 +69,7 @@ func (stack *elementStack) getData() string {
 	for len(stack.elements) > 1 {
 		stack.pop()
 	}
-	return string(stack.top().getData())
+	return string(stack.top().getFinishedData())
 }
 
 func (stack *elementStack) top() element {
@@ -73,7 +78,7 @@ func (stack *elementStack) top() element {
 
 func (stack *elementStack) pop() {
 	if len(stack.elements) > 1 {
-		data := stack.top().getData()
+		data := stack.top().getFinishedData()
 		stack.elements = stack.elements[:len(stack.elements)-1]
 		stack.top().addData(data)
 	}
@@ -88,6 +93,9 @@ func (stack *elementStack) parseByte(b byte) {
 }
 
 func (e *baseElement) parseByte(b byte) {
+	if b == '\'' {
+		return
+	}
 	if b == ' ' && e.equalsCount > 0 {
 		e.data.Truncate(e.data.Len() - e.equalsCount)
 
@@ -95,6 +103,14 @@ func (e *baseElement) parseByte(b byte) {
 
 		e.equalsCount = 0
 		return
+	}
+
+	if b == '[' && e.data.Len() > 0 {
+		if e.data.Bytes()[e.data.Len()-1] == '[' {
+			e.data.Truncate(e.data.Len() - 1)
+			e.stack.push(&linkElement{e.stack, &bytes.Buffer{}})
+			return
+		}
 	}
 
 	if b == '=' {
@@ -105,7 +121,7 @@ func (e *baseElement) parseByte(b byte) {
 	e.data.WriteByte(b)
 }
 
-func (e *baseElement) getData() []byte {
+func (e *baseElement) getFinishedData() []byte {
 	return e.data.Bytes()
 }
 
@@ -133,7 +149,7 @@ func (e *headingElement) parseByte(b byte) {
 
 }
 
-func (e *headingElement) getData() []byte {
+func (e *headingElement) getFinishedData() []byte {
 	if _, ok := footerHeadings[e.data.String()]; ok {
 		l := len(e.stack.elements)
 		e.stack.elements = append(e.stack.elements[:l-1], &footerElement{}, e)
@@ -150,9 +166,32 @@ func (e *headingElement) addData(b []byte) {
 func (e *footerElement) parseByte(b byte) {
 }
 
-func (e *footerElement) getData() []byte {
+func (e *footerElement) getFinishedData() []byte {
 	return []byte{}
 }
 
 func (e *footerElement) addData(b []byte) {
+}
+
+func (e *linkElement) parseByte(b byte) {
+	if b == '|' {
+		e.data.Reset()
+		return
+	}
+	if b == ']' && e.data.Len() > 0 {
+		if e.data.Bytes()[e.data.Len()-1] == ']' {
+			e.data.Truncate(e.data.Len() - 1)
+			e.stack.pop()
+			return
+		}
+	}
+	e.data.WriteByte(b)
+}
+
+func (e *linkElement) getFinishedData() []byte {
+	return e.data.Bytes()
+}
+
+func (e *linkElement) addData(b []byte) {
+	e.data.Write(b)
 }
