@@ -21,6 +21,7 @@ type baseElement struct {
 	stack       *elementStack
 	data        *bytes.Buffer
 	equalsCount int
+	lastByte    byte
 }
 
 type headingElement struct {
@@ -67,7 +68,7 @@ func Clean(input string) (string, error) {
 
 func newStack() *elementStack {
 	stack := &elementStack{make([]element, 0)}
-	stack.push(&baseElement{stack, &bytes.Buffer{}, 0})
+	stack.push(&baseElement{stack, &bytes.Buffer{}, 0, 0})
 	return stack
 }
 
@@ -99,9 +100,11 @@ func (stack *elementStack) parseByte(b byte) {
 }
 
 func (e *baseElement) parseByte(b byte) {
+	// text formatting
 	if b == '\'' {
 		return
 	}
+	// headings
 	if b == ' ' && e.equalsCount > 0 {
 		e.data.Truncate(e.data.Len() - e.equalsCount)
 
@@ -111,31 +114,42 @@ func (e *baseElement) parseByte(b byte) {
 		return
 	}
 
-	if b == '[' && e.data.Len() > 0 {
-		if e.data.Bytes()[e.data.Len()-1] == '[' {
-			e.data.Truncate(e.data.Len() - 1)
-			e.stack.push(&linkElement{e.stack, &bytes.Buffer{}, true})
-			return
-		}
-	} else if e.data.Len() > 0 && e.data.Bytes()[e.data.Len()-1] == '[' {
-		e.data.Truncate(e.data.Len() - 1)
-		e.stack.push(&linkElement{e.stack, &bytes.Buffer{}, false})
-		return
-	}
-
-	if b == '{' && e.data.Len() > 0 {
-		if e.data.Bytes()[e.data.Len()-1] == '{' {
-			e.data.Truncate(e.data.Len() - 1)
-			e.stack.push(&templateElement{e.stack, 0})
-			return
-		}
-	}
-
 	if b == '=' {
 		e.equalsCount++
 	} else {
 		e.equalsCount = 0
 	}
+
+	// links
+	if e.lastByte == '[' {
+		internal := false
+		if b == '[' {
+			internal = true
+		}
+		e.data.Truncate(e.data.Len() - 1)
+		e.stack.push(&linkElement{e.stack, &bytes.Buffer{}, internal})
+		e.lastByte = 0
+		return
+	}
+
+	// templates
+	if b == '{' && e.lastByte == '{' {
+		e.data.Truncate(e.data.Len() - 1)
+		e.stack.push(&templateElement{e.stack, 0})
+		e.lastByte = 0
+		return
+	}
+
+	// lists
+	if e.lastByte == '#' || e.lastByte == '*' {
+		e.data.Truncate(e.data.Len() - 1)
+		if b != e.lastByte {
+			e.lastByte = 0
+			return
+		}
+	}
+
+	e.lastByte = b
 	e.data.WriteByte(b)
 }
 
