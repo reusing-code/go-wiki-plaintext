@@ -38,6 +38,11 @@ type linkElement struct {
 	internal bool
 }
 
+type templateElement struct {
+	stack    *elementStack
+	lastByte byte
+}
+
 var footerHeadings = map[string]bool{
 	"Notes":             true,
 	"See also":          true,
@@ -116,6 +121,14 @@ func (e *baseElement) parseByte(b byte) {
 		e.data.Truncate(e.data.Len() - 1)
 		e.stack.push(&linkElement{e.stack, &bytes.Buffer{}, false})
 		return
+	}
+
+	if b == '{' && e.data.Len() > 0 {
+		if e.data.Bytes()[e.data.Len()-1] == '{' {
+			e.data.Truncate(e.data.Len() - 1)
+			e.stack.push(&templateElement{e.stack, 0})
+			return
+		}
 	}
 
 	if b == '=' {
@@ -207,4 +220,19 @@ func (e *linkElement) getFinishedData() []byte {
 
 func (e *linkElement) addData(b []byte) {
 	e.data.Write(b)
+}
+
+func (e *templateElement) parseByte(b byte) {
+	if b == '}' && e.lastByte == '}' {
+		e.stack.pop()
+		return
+	}
+	e.lastByte = b
+}
+
+func (e *templateElement) getFinishedData() []byte {
+	return []byte{}
+}
+
+func (e *templateElement) addData(b []byte) {
 }
