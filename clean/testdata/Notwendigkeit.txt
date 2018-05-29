@@ -15,6 +15,8 @@ In der [[Ontologie]] ist die (absolute) Notwendigkeit der Gegenbegriff zur [[Kon
 
 Im politischen Denken [[Niccolò Machiavelli]]s nimmt die Notwendigkeit (''necessità'') eine Schlüsselrolle ein. Das politische Handeln solle sich nach der Notwendigkeit einer Situation richten.
 
+[http://www.wikipedia.org Wikipedia]
+
 == Logische Notwendigkeit ==
 {{Hauptartikel|Modallogik}}
 Logische Notwendigkeit ist eine Eigenschaft von Aussagen. Eine Aussage ist genau dann logisch notwendig, wenn es unmöglich ist, dass diese Aussage falsch ist. Doch diese Formulierung ist eine Beschreibung, keine Definition. Die übliche formale Definition für Notwendigkeit geht auf [[Gottfried Wilhelm Leibniz|Leibniz]] und sein Konzept der möglichen Welten zurück: Eine Aussage wird genau dann als notwendig betrachtet, wenn sie in allen überhaupt möglichen Welten wahr ist, wenn die Wirklichkeit also keinesfalls so beschaffen sein könnte, dass die gegenständliche Aussage falsch sein kann.

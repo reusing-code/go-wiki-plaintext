@@ -33,8 +33,9 @@ type headingElement struct {
 type footerElement struct{}
 
 type linkElement struct {
-	stack *elementStack
-	data  *bytes.Buffer
+	stack    *elementStack
+	data     *bytes.Buffer
+	internal bool
 }
 
 var footerHeadings = map[string]bool{
@@ -108,9 +109,13 @@ func (e *baseElement) parseByte(b byte) {
 	if b == '[' && e.data.Len() > 0 {
 		if e.data.Bytes()[e.data.Len()-1] == '[' {
 			e.data.Truncate(e.data.Len() - 1)
-			e.stack.push(&linkElement{e.stack, &bytes.Buffer{}})
+			e.stack.push(&linkElement{e.stack, &bytes.Buffer{}, true})
 			return
 		}
+	} else if e.data.Len() > 0 && e.data.Bytes()[e.data.Len()-1] == '[' {
+		e.data.Truncate(e.data.Len() - 1)
+		e.stack.push(&linkElement{e.stack, &bytes.Buffer{}, false})
+		return
 	}
 
 	if b == '=' {
@@ -174,13 +179,21 @@ func (e *footerElement) addData(b []byte) {
 }
 
 func (e *linkElement) parseByte(b byte) {
-	if b == '|' {
+	if e.internal && b == '|' {
+		e.data.Reset()
+		return
+	}
+	if !e.internal && b == ' ' {
 		e.data.Reset()
 		return
 	}
 	if b == ']' && e.data.Len() > 0 {
 		if e.data.Bytes()[e.data.Len()-1] == ']' {
 			e.data.Truncate(e.data.Len() - 1)
+			e.stack.pop()
+			return
+		}
+		if !e.internal {
 			e.stack.pop()
 			return
 		}
